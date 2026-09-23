@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geoportal de Minas Gerais | Patrimônio Cultural IEPHA & Municípios</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Leaflet MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <!-- Estilos Personalizados do Geoportal -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app-container">
+
+    <!-- BARRA SUPERIOR (HEADER) -->
+    <header id="main-header">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <i class="fa-solid fa-monument"></i>
+        </div>
+        <div class="brand-titles">
+          <h1>GEOPORTAL DE MINAS GERAIS</h1>
+          <p>Patrimônio Cultural Tombado (IEPHA 2026) & Malha Municipal (IGC/Sisema)</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="header-badge" id="badge-tombamentos">
+          <i class="fa-solid fa-landmark"></i>
+          <span><strong>190</strong> Bens Tombados</span>
+        </div>
+        <div class="header-badge" id="badge-municipios">
+          <i class="fa-solid fa-map"></i>
+          <span><strong>853</strong> Municípios</span>
+        </div>
+        <button class="btn-header" id="btn-header-home" title="Visão Geral de Minas Gerais">
+          <i class="fa-solid fa-house"></i>
+          <span>Extensão Total</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL (MAPA E PAINEL) -->
+    <main id="main-content">
+
+      <!-- BARRA LATERAL (SIDEBAR) -->
+      <aside id="sidebar">
+        <!-- Navegação por Abas -->
+        <nav class="sidebar-tabs">
+          <button class="tab-btn active" data-tab="tab-camadas" title="Camadas e Mapas Base">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Camadas</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-filtros" title="Filtros e Consulta de Bens">
+            <i class="fa-solid fa-filter"></i>
+            <span>Filtros</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-tabela" title="Tabela de Dados">
+            <i class="fa-solid fa-table-list"></i>
+            <span>Tabela</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-estatisticas" title="Gráficos e Estatísticas">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Estatísticas</span>
+          </button>
+        </nav>
+
+        <!-- Conteúdo das Abas -->
+        <div class="sidebar-content">
+
+          <!-- ABA 1: CAMADAS & MAPAS BASE -->
+          <div id="tab-camadas" class="tab-pane active">
+
+            <!-- Mapas de Fundo (Ruas e Topografia) -->
+            <div class="card-section">
+              <div class="card-title">
+                <span><i class="fa-solid fa-map-location-dot"></i> Mapas de Fundo</span>
+              </div>
+              <div class="basemaps-grid">
+                <!-- Ruas -->
+                <div class="basemap-card active" data-basemap="streets" id="bm-streets" title="Mapa de Vias e Ruas Detalhado">
+                  <div class="basemap-thumb thumb-streets">
+                    <i class="fa-solid fa-road"></i>
+                  </div>
+                  <div class="basemap-label">Ruas</div>
+                  <div class="basemap-desc">Vias e Cidades</div>
+                </div>
+                <!-- Topografia -->
+                <div class="basemap-card" data-basemap="topo" id="bm-topo" title="Relevo e Topografia em Cores Claras">
+                  <div class="basemap-thumb thumb-topo">
+                    <i class="fa-solid fa-mountain"></i>
+                  </div>
+                  <div class="basemap-label">Topografia Clara</div>
+                  <div class="basemap-desc">Relevo Suave</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Camadas Vetoriais -->
+            <div class="card-section">
+              <div class="card-title">
+                <span><i class="fa-solid fa-draw-polygon"></i> Camadas Vetoriais</span>
+              </div>
+
+              <!-- Camada IEPHA -->
+              <div class="layer-item">
+                <div class="layer-header">
+                  <div class="layer-title-wrapper">
+                    <label class="layer-switch">
+                      <input type="checkbox" id="layer-toggle-iepha" checked>
+                      <span class="slider-switch"></span>
+                    </label>
+                    <span class="layer-name">Tombamentos IEPHA 2026</span>
+                  </div>
+                  <span class="layer-count-badge" id="count-iepha-badge">190</span>
+                </div>
+                <div class="layer-controls">
+                  <div class="opacity-control">
+                    <span>Opacidade:</span>
+                    <input type="range" id="layer-opacity-iepha" min="0.1" max="1" step="0.05" value="1">
+                    <span id="opacity-val-iepha">100%</span>
+                  </div>
+                  <label class="extra-option">
+                    <input type="checkbox" id="toggle-clustering" checked>
+                    <span>Agrupar pontos próximos (Clusters)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Camada Municípios -->
+              <div class="layer-item">
+                <div class="layer-header">
+                  <div class="layer-title-wrapper">
+                    <label class="layer-switch">
+                      <input type="checkbox" id="layer-toggle-munc" checked>
+                      <span class="slider-switch"></span>
+                    </label>
+                    <span class="layer-name">Municípios de MG</span>
+                  </div>
+                  <span class="layer-count-badge">853</span>
+                </div>
+                <div class="layer-controls">
+                  <div class="opacity-control">
+                    <span>Opacidade:</span>
+                    <input type="range" id="layer-opacity-munc" min="0.05" max="0.9" step="0.05" value="0.2">
+                    <span id="opacity-val-munc">20%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Legenda Cartográfica -->
+            <div class="card-section">
+              <div class="card-title">
+                <span><i class="fa-solid fa-list-check"></i> Legenda</span>
+              </div>
+              <div class="legend-list">
+                <div class="legend-item">
+                  <div class="legend-color-dot" style="background-color: #2563eb;"></div>
+                  <span><strong>BI</strong> - Bem Imóvel (Edificações, templos)</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color-dot" style="background-color: #d97706;"></div>
+                  <span><strong>CP</strong> - Conjunto Paisagístico / Arquitetônico</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color-dot" style="background-color: #dc2626;"></div>
+                  <span><strong>CH</strong> - Centro Histórico / Núcleo Histórico</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color-dot" style="background-color: #7c3aed;"></div>
+                  <span><strong>BM</strong> - Bem Móvel / Acervo Integrado</span>
+                </div>
+                <div class="legend-item" style="margin-top: 4px;">
+                  <div class="legend-poly-box"></div>
+                  <span>Limites dos Municípios de Minas Gerais</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ABA 2: FILTROS E PESQUISA DOS BENS -->
+          <div id="tab-filtros" class="tab-pane">
+            <div class="card-section">
+              <div class="card-title">
+                <span><i class="fa-solid fa-magnifying-glass"></i> Filtrar Bens Tombados</span>
+              </div>
+
+              <!-- Busca por Texto -->
+              <div class="form-group">
+                <label for="filter-text-search">Nome do Bem ou Processo:</label>
+                <input type="text" id="filter-text-search" class="form-control" placeholder="Ex: Igreja, Palácio, Fazenda...">
+              </div>
+
+              <!-- Filtro por Categoria -->
+              <div class="form-group">
+                <label for="filter-categoria">Categoria:</label>
+                <select id="filter-categoria" class="form-control">
+                  <option value="">Todas as Categorias</option>
+                  <option value="BI">BI - Bem Imóvel</option>
+                  <option value="CP">CP - Conjunto Paisagístico</option>
+                  <option value="CH">CH - Centro Histórico</option>
+                  <option value="BM">BM - Bem Móvel</option>
+                </select>
+              </div>
+
+              <!-- Filtro por Município -->
+              <div class="form-group">
+                <label for="filter-municipio">Município:</label>
+                <select id="filter-municipio" class="form-control">
+                  <option value="">Todos os Municípios (77 com bens)</option>
+                  <!-- Preenchido via JavaScript -->
+                </select>
+              </div>
+
+              <!-- Filtro por Subcategoria -->
+              <div class="form-group">
+                <label for="filter-subcategoria">Subcategoria:</label>
+                <select id="filter-subcategoria" class="form-control">
+                  <option value="">Todas as Subcategorias</option>
+                  <!-- Preenchido via JavaScript -->
+                </select>
+              </div>
+
+              <div class="btn-group-actions">
+                <button class="btn btn-primary" id="btn-apply-filters">
+                  <i class="fa-solid fa-check"></i> Aplicar
+                </button>
+                <button class="btn btn-secondary" id="btn-reset-filters">
+                  <i class="fa-solid fa-rotate-left"></i> Limpar
+                </button>
+              </div>
+            </div>
+
+            <!-- Resumo dos Filtros Ativos -->
+            <div class="card-section">
+              <div class="card-title">
+                <span><i class="fa-solid fa-bullseye"></i> Resultados Atuais</span>
+              </div>
+              <p style="font-size: 13px; line-height: 1.5; color: var(--text-muted);" id="filter-status-text">
+                Exibindo <strong>190</strong> de <strong>190</strong> bens tombados no mapa.
+              </p>
+            </div>
+          </div>
+
+          <!-- ABA 3: TABELA DE DADOS -->
+          <div id="tab-tabela" class="tab-pane">
+            <div class="table-header-info">
+              <span id="table-count-label"><strong>190</strong> registros</span>
+              <button class="btn btn-success" id="btn-export-csv" style="padding: 4px 8px; font-size: 11px;">
+                <i class="fa-solid fa-file-csv"></i> Baixar CSV
+              </button>
+            </div>
+
+            <div class="table-wrapper">
+              <table class="data-table" id="table-tombamentos">
+                <thead>
+                  <tr>
+                    <th>Nome do Bem</th>
+                    <th>Município</th>
+                    <th>Cat.</th>
+                    <th>Ação</th>
+                  </tr>
+                </thead>
+                <tbody id="table-body-tombamentos">
+                  <!-- Linhas geradas via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ABA 4: ESTATÍSTICAS E SOBRE -->
+          <div id="tab-estatisticas" class="tab-pane">
+
+            <!-- Indicadores Chave -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-landmark"></i></div>
+                <div>
+                  <div class="stat-value" id="stat-total-bens">190</div>
+                  <div class="stat-label">Bens Tombados</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon amber"><i class="fa-solid fa-city"></i></div>
+                <div>
+                  <div class="stat-value" id="stat-total-cidades">77</div>
+                  <div class="stat-label">Cidades com Bens</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-map-location"></i></div>
+                <div>
+                  <div class="stat-value">853</div>
+                  <div class="stat-label">Municípios MG</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon purple"><i class="fa-solid fa-tags"></i></div>
+                <div>
+                  <div class="stat-value">4</div>
+                  <div class="stat-label">Categorias</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gráfico de Categorias -->
+            <div class="chart-container">
+              <div class="chart-title">
+                <i class="fa-solid fa-chart-pie"></i> Bens por Categoria
+              </div>
+              <canvas id="chart-categorias" height="180"></canvas>
+            </div>
+
+            <!-- Gráfico de Top Cidades -->
+            <div class="chart-container">
+              <div class="chart-title">
+                <i class="fa-solid fa-chart-column"></i> Top Municípios com Mais Tombamentos
+              </div>
+              <canvas id="chart-municipios" height="200"></canvas>
+            </div>
+
+            <!-- Informações / Metadados -->
+            <div class="card-section">
+              <div class="card-title">
+                <span><i class="fa-solid fa-circle-info"></i> Metadados Oficiais</span>
+              </div>
+              <p style="font-size: 11px; line-height: 1.6; color: var(--text-muted);">
+                <strong>Fonte dos Tombamentos:</strong> IEPHA/MG - Instituto Estadual do Patrimônio Histórico e Artístico de Minas Gerais (Versão 2026_v1).<br>
+                <strong>Fonte dos Municípios:</strong> IDE-Sisema / IGC-MG (Instituto de Geociências Aplicadas).<br>
+                <strong>Sistema Geodésico:</strong> SIRGAS 2000 (EPSG:4674) / WGS84.<br>
+                <strong>Desenvolvimento:</strong> WebGIS Interativo em Arquitetura Aberta.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- BOTÃO PARA RETRAIR/EXPANDIR A SIDEBAR -->
+      <button class="sidebar-toggle-btn" id="sidebar-toggle" title="Recolher / Expandir Painel">
+        <i class="fa-solid fa-chevron-left" id="toggle-icon"></i>
+      </button>
+
+      <!-- CAMPO DE PESQUISA DE ENDEREÇOS (FLUTUANTE NO MAPA) -->
+      <div id="address-search-container">
+        <div class="search-box-wrapper">
+          <i class="fa-solid fa-location-dot search-icon"></i>
+          <input type="text" id="address-search-input" placeholder="Pesquisar endereço, rua, praça ou cidade em MG..." autocomplete="off">
+          <i class="fa-solid fa-circle-notch fa-spin search-spinner" id="search-spinner"></i>
+          <button class="search-clear-btn" id="search-clear-btn" title="Limpar pesquisa">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <!-- Dropdown com os Resultados -->
+        <div id="address-results-dropdown"></div>
+      </div>
+
+      <!-- FERRAMENTAS FLUTUANTES DO MAPA -->
+      <div class="map-tools-bar">
+        <button class="map-tool-btn" id="tool-home" title="Retornar à Extensão Geral de Minas Gerais">
+          <i class="fa-solid fa-compass"></i>
+        </button>
+        <button class="map-tool-btn" id="tool-locate" title="Minha Localização Atual (GPS)">
+          <i class="fa-solid fa-crosshairs"></i>
+        </button>
+        <button class="map-tool-btn" id="tool-measure" title="Régua de Medição (Distância e Área)">
+          <i class="fa-solid fa-ruler-combined"></i>
+        </button>
+        <button class="map-tool-btn" id="tool-fullscreen" title="Modo Tela Cheia">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+      </div>
+
+      <!-- PAINEL FLUTUANTE DE MEDIÇÃO -->
+      <div id="measure-panel">
+        <div class="measure-header">
+          <span><i class="fa-solid fa-ruler-combined"></i> Medição no Mapa</span>
+          <button id="btn-close-measure" style="background:none;border:none;cursor:pointer;color:var(--text-muted);">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
+          Clique no mapa para adicionar pontos. Clique duplo para concluir.
+        </p>
+        <div class="measure-result" id="measure-result-val">0.00 km</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-secondary" id="btn-clear-measure" style="flex:1;padding:4px 8px;font-size:10px;">
+            <i class="fa-solid fa-trash"></i> Limpar
+          </button>
+        </div>
+      </div>
+
+      <!-- CONTÊINER DO MAPA LEAFLET -->
+      <div id="map"></div>
+
+      <!-- RODAPÉ COM COORDENADAS E ESCALA -->
+      <footer id="map-footer">
+        <div class="coords-display">
+          <span id="coord-lat">Lat: -18.50000°</span>
+          <span id="coord-lng">Lng: -44.50000°</span>
+          <span id="map-zoom">Zoom: 7</span>
+        </div>
+        <div style="font-size:10px;color:#94a3b8;">
+          SIRGAS 2000 | Geoportal Minas Gerais
+        </div>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- BIBLIOTECAS EXTERNAS -->
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- Chart.js para Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- DADOS EMBUTIDOS (Compatibilidade total com duplo clique direto no arquivo file:///) -->
+  <script src="js/data_tombamento.js"></script>
+  <script src="js/data_munc.js"></script>
+
+  <!-- LÓGICA PRINCIPAL DO WEBGIS -->
+  <script src="js/app.js"></script>
+</body>
+</html>
